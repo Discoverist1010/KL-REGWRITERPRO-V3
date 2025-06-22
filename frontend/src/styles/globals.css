@@ -1,0 +1,592 @@
+/* Basic styling for KL RegWriter Pro V3 */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #1a1d29 0%, #2d3748 100%);
+  color: #ffffff;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Start Page Styles */
+.start-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.title {
+  font-size: 4rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.title .kl { color: #4a90e2; }
+.title .reg { color: #50c878; }
+.title .pro { color: #ffc107; }
+
+.subtitle {
+  font-size: 1.25rem;
+  color: #a0aec0;
+}
+
+.mode-selection {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.mode-btn {
+  padding: 1.5rem 3rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.trainer-btn {
+  background: #4a90e2;
+  color: white;
+}
+
+.trainer-btn:hover {
+  background: #357abd;
+  transform: translateY(-2px);
+}
+
+.student-btn {
+  background: transparent;
+  color: #a0aec0;
+  border: 2px solid #4a5568;
+}
+
+.student-btn:hover {
+  border-color: #50c878;
+  color: #50c878;
+  transform: translateY(-2px);
+}
+
+/* Student Interface Styles */
+.student-interface {
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.student-interface h1 {
+  color: #4a90e2;
+  margin-bottom: 1rem;
+}
+cat > src/styles/globals.css << 'EOF'
+/* Basic styling for KL RegWriter Pro V3 */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #1a1d29 0%, #2d3748 100%);
+  color: #ffffff;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Start Page Styles */
+.start-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.title {
+  font-size: 4rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.title .kl { color: #4a90e2; }
+.title .reg { color: #50c878; }
+.title .pro { color: #ffc107; }
+
+.subtitle {
+  font-size: 1.25rem;
+  color: #a0aec0;
+}
+
+.mode-selection {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.mode-btn {
+  padding: 1.5rem 3rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.trainer-btn {
+  background: #4a90e2;
+  color: white;
+}
+
+.trainer-btn:hover {
+  background: #357abd;
+  transform: translateY(-2px);
+}
+
+.student-btn {
+  background: transparent;
+  color: #a0aec0;
+  border: 2px solid #4a5568;
+}
+
+.student-btn:hover {
+  border-color: #50c878;
+  color: #50c878;
+  transform: translateY(-2px);
+}
+
+/* Student Interface Styles */
+.student-interface {
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.student-interface h1 {
+  color: #4a90e2;
+  margin-bottom: 1rem;
+}
+/* Trainer Dashboard Styles */
+.trainer-dashboard {
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.page-header h1 {
+  color: #4a90e2;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.page-header p {
+  color: #a0aec0;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.status {
+  background: rgba(45, 55, 72, 0.8);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  display: inline-block;
+  font-size: 0.9rem;
+}
+
+.form-section {
+  background: rgba(45, 55, 72, 0.8);
+  padding: 2rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.form-input, .form-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(26, 29, 41, 0.8);
+  border: 1px solid #4a5568;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+.form-input:focus, .form-select:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.time-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.time-btn {
+  padding: 0.75rem 1.5rem;
+  background: rgba(26, 29, 41, 0.8);
+  border: 1px solid #4a5568;
+  border-radius: 8px;
+  color: #a0aec0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.time-btn.active,
+.time-btn:hover {
+  background: #4a90e2;
+  border-color: #4a90e2;
+  color: white;
+}
+
+.create-btn {
+  width: 100%;
+  padding: 1rem 2rem;
+  background: #50c878;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.create-btn:hover {
+  background: #48bb78;
+  transform: translateY(-1px);
+}
+
+.back-button {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.back-button button {
+  background: transparent;
+  color: #a0aec0;
+  border: 1px solid #4a5568;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.back-button button:hover {
+  border-color: #4a90e2;
+  color: #4a90e2;
+}
+/* Trainer Dashboard Styles */
+.trainer-dashboard {
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.page-header h1 {
+  color: #4a90e2;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.page-header p {
+  color: #a0aec0;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.status {
+  background: rgba(45, 55, 72, 0.8);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  display: inline-block;
+  font-size: 0.9rem;
+}
+
+.form-section {
+  background: rgba(45, 55, 72, 0.8);
+  padding: 2rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.form-input, .form-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(26, 29, 41, 0.8);
+  border: 1px solid #4a5568;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+.form-input:focus, .form-select:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.time-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.time-btn {
+  padding: 0.75rem 1.5rem;
+  background: rgba(26, 29, 41, 0.8);
+  border: 1px solid #4a5568;
+  border-radius: 8px;
+  color: #a0aec0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.time-btn.active,
+.time-btn:hover {
+  background: #4a90e2;
+  border-color: #4a90e2;
+  color: white;
+}
+
+.create-btn {
+  width: 100%;
+  padding: 1rem 2rem;
+  background: #50c878;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.create-btn:hover {
+  background: #48bb78;
+  transform: translateY(-1px);
+}
+
+.back-button {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.back-button button {
+  background: transparent;
+  color: #a0aec0;
+  border: 1px solid #4a5568;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.back-button button:hover {
+  border-color: #4a90e2;
+  color: #4a90e2;
+}
+/* Enhanced Trainer Dashboard */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.form-section h3 {
+  color: #4a90e2;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Upload Area Styles */
+.upload-area {
+  border: 2px dashed #4a5568;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.upload-area:hover {
+  border-color: #4a90e2;
+  background: rgba(74, 144, 226, 0.05);
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-label {
+  cursor: pointer;
+  display: block;
+}
+
+.upload-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.upload-text {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: #ffffff;
+  word-break: break-word;
+}
+
+.upload-info {
+  color: #a0aec0;
+  font-size: 0.9rem;
+}
+
+.upload-status {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.upload-btn {
+  width: 100%;
+  padding: 1rem;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-btn:hover:not(:disabled) {
+  background: #357abd;
+}
+
+.upload-btn:disabled {
+  background: #4a5568;
+  cursor: not-allowed;
+}
+
+.create-btn:disabled {
+  background: #4a5568;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Checkbox and Focus Areas */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.checkbox-item:hover {
+  background: rgba(74, 144, 226, 0.1);
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: #4a90e2;
+}
+
+.checkbox-item span {
+  color: #ffffff;
+  font-size: 0.95rem;
+}
+
+/* Enhanced upload status */
+.upload-status {
+  background: rgba(74, 144, 226, 0.1);
+  border: 1px solid #4a90e2;
+  color: #ffffff;
+}

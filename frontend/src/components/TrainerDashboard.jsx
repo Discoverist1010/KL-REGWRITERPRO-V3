@@ -296,7 +296,7 @@ const TrainerDashboard = () => {
               </button>
               <button 
                 onClick={() => {
-                  navigator.clipboard.writeText(`http://localhost:3000/student/${createdSession.sessionId}`)
+                  navigator.clipboard.writeText(`${window.location.origin}/student/${createdSession.sessionId}`)
                   alert('Session URL copied to clipboard!')
                 }}
                 style={{

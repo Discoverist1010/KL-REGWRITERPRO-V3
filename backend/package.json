@@ -1,38 +1,26 @@
 {
-  "name": "kl-regwriterpro-v3-backend",
+  "name": "kl-regwriter-backend",
   "version": "3.0.0",
-  "description": "KL RegWriter Pro V3 - Backend API for Regulatory Training Platform",
+  "description": "KL RegWriter Pro V3 Backend with Claude AI",
   "main": "src/app.js",
   "scripts": {
     "start": "node src/app.js",
-    "dev": "nodemon src/app.js",
-    "test": "echo \"No tests specified\" && exit 0"
+    "dev": "nodemon src/app.js"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.9.1",
-    "compression": "^1.8.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "express-rate-limit": "^7.5.1",
-    "helmet": "^8.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
     "multer": "^1.4.5-lts.1",
     "pdf-parse": "^1.1.1",
-    "uuid": "^9.0.0"
+    "express-rate-limit": "^7.1.5",
+    "compression": "^1.7.4",
+    "helmet": "^7.1.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.20"
+    "nodemon": "^3.0.1"
   },
   "engines": {
-    "node": ">=16.0.0"
-  },
-  "keywords": [
-    "regulatory",
-    "training",
-    "ai",
-    "express",
-    "claude"
-  ],
-  "author": "KL RegWriter Pro Team",
-  "license": "MIT"
+    "node": ">=18.0.0"
+  }
 }

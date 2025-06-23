@@ -116,7 +116,7 @@ const getSession = async (req, res) => {
       // Return session data (ensure documentUrl is absolute)
       const responseData = {
         ...sessionData,
-        documentUrl: `http://localhost:5000${sessionData.documentUrl}`,
+        documentUrl: `${process.env.BACKEND_URL || 'http://localhost:5000'}${sessionData.documentUrl}`,
         timeRemaining: Math.max(0, Math.floor((expiresAt - now) / 1000 / 60)) // minutes remaining
       }
 

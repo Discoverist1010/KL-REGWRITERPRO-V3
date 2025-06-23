@@ -38,7 +38,8 @@ if (process.env.NODE_ENV === 'production') {
     max: 200, // Increased for CORS preflight requests
     message: { error: 'Too many requests, please try again later' },
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    skip: (req) => req.path === '/api/health' // 🔧 ADDED: Don't rate limit health checks
   })
   
   app.use('/api/', limiter)
@@ -162,4 +163,44 @@ app.use('*', (req, res) => {
   })
 })
 
-// 🔧 ENHANCED ERROR HANDLING WITH CORS
+// 🔧 ENHANCED ERROR HANDLING WITH CORS DEBUGGING - COMPLETION
+app.use((error, req, res, next) => {
+  if (error.message === 'Not allowed by CORS') {
+    console.error('❌ CORS Error Details:', {
+      origin: req.headers.origin,
+      method: req.method,
+      url: req.url,
+      userAgent: req.headers['user-agent']
+    })
+    return res.status(403).json({
+      error: 'CORS Error',
+      message: 'Origin not allowed by CORS policy',
+      origin: req.headers.origin,
+      allowedOrigins: [
+        'https://kl-regwriterpro-v3.vercel.app',
+        process.env.FRONTEND_URL
+      ].filter(Boolean)
+    })
+  }
+  
+  console.error('❌ Server Error:', error)
+  res.status(500).json({
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+  })
+})
+
+// Start server
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 KL RegWriter Pro V3 Backend running on port ${PORT}`)
+  console.log(`📁 Upload directory: ${path.join(__dirname, '../uploads')}`)
+  console.log(`🌐 CORS enabled for: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`)
+  console.log(`🔗 Vercel preview deployments: Auto-detected`)
+  console.log(`⚡ Environment: ${process.env.NODE_ENV || 'development'}`)
+  console.log(`✅ Upload route enabled`)
+  console.log(`✅ Sessions and Analysis routes available`)
+  console.log(`🤖 Claude AI integration: ${process.env.CLAUDE_API_KEY ? 'Configured' : 'Missing API key'}`)
+  console.log(`🔍 Health check: https://kl-regwriterpro-v3-production.up.railway.app/api/health`)
+})
+
+module.exports = app

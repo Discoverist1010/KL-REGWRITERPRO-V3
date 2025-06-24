@@ -1,4 +1,4 @@
-// backend/src/services/claudeService.js - FIXED with Current Model Names
+// backend/src/services/claudeService.js - OPTIMIZED for Speed
 const fs = require('fs').promises
 const path = require('path')
 
@@ -10,282 +10,189 @@ class ClaudeService {
     this.apiKey = process.env.CLAUDE_API_KEY
     this.apiUrl = 'https://api.anthropic.com/v1/messages'
     
-    console.log('🔧 Claude Service Initialization:')
-    console.log('   Node.js version:', process.version)
-    console.log('   Fetch available:', typeof fetch !== 'undefined')
-    console.log('   API Key exists:', !!this.apiKey)
-    console.log('   API Key format valid:', this.apiKey?.startsWith('sk-ant-'))
-    console.log('   API URL:', this.apiUrl)
+    // Reduced logging for production performance
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 Claude Service Initialization:')
+      console.log('   API Key exists:', !!this.apiKey)
+      console.log('   API Key format valid:', this.apiKey?.startsWith('sk-ant-'))
+    }
     
-    if (this.apiKey) {
-      console.log('🤖 Claude AI service initialized with API key')
-    } else {
+    if (!this.apiKey) {
       console.log('⚠️ Claude AI service initialized in demo mode (no API key)')
     }
   }
 
-  // Main analysis function
+  // Main analysis function - OPTIMIZED
   async analyzeRegulatoryWriting(submissionData, documentContent = null) {
     try {
-      console.log('🚀 Starting Claude AI analysis for session:', submissionData.sessionId)
-      console.log('🔑 API Key available:', !!this.apiKey)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🚀 Starting Claude AI analysis for session:', submissionData.sessionId)
+      }
 
       if (!this.apiKey) {
-        console.warn('⚠️ Claude API key not found, using enhanced demo mode')
         return this.generateEnhancedDemo(submissionData)
       }
 
-      // Get document content if available
-      let documentText = documentContent
-      if (!documentText && submissionData.documentId) {
-        console.log('📄 Fetching document content for:', submissionData.documentId)
-        documentText = await this.getDocumentContent(submissionData.documentId)
-      }
+      // Parallel document fetch and prompt creation when possible
+      const [documentText, prompt] = await Promise.all([
+        documentContent || (submissionData.documentId ? this.getDocumentContent(submissionData.documentId) : Promise.resolve(null)),
+        Promise.resolve(this.createOptimizedPrompt(submissionData, documentContent))
+      ])
 
-      // Create comprehensive analysis prompt
-      console.log('📝 Creating analysis prompt...')
-      const prompt = this.createAnalysisPrompt(submissionData, documentText)
+      // Update prompt with document text if we fetched it
+      const finalPrompt = documentContent ? prompt : this.createOptimizedPrompt(submissionData, documentText)
 
-      // Call Claude API
-      console.log('📡 Calling Claude API for real analysis...')
-      const response = await this.callClaudeAPI(prompt)
+      // Call Claude API with optimized settings
+      const response = await this.callClaudeAPI(finalPrompt)
 
-      // Parse and structure the response
-      console.log('🔄 Parsing Claude response...')
-      const analysis = this.parseClaudeResponse(response, submissionData)
+      // Fast response parsing
+      const analysis = this.parseClaudeResponseFast(response, submissionData)
 
-      console.log('✅ Real Claude AI analysis completed successfully')
       return analysis
 
     } catch (error) {
       console.error('❌ Claude AI analysis error:', error.message)
-      console.error('📄 Full error stack:', error.stack)
-      console.log('🔄 Falling back to enhanced demo mode')
-      // Fallback to enhanced demo on error
+      // Fast fallback without detailed error logging
       return this.generateEnhancedDemo(submissionData, `Claude API Error: ${error.message}`)
     }
   }
 
-  // Create sophisticated regulatory writing analysis prompt
-  createAnalysisPrompt(submissionData, documentText) {
-    const { answers, sessionId } = submissionData
+  // OPTIMIZED: Shorter, more focused prompt for faster processing
+  createOptimizedPrompt(submissionData, documentText) {
+    const { answers } = submissionData
     const { executiveSummary, impactAnalysis } = answers
 
-    console.log('📋 Creating prompt with:')
-    console.log('   Executive Summary length:', executiveSummary?.length || 0)
-    console.log('   Impact Analysis length:', impactAnalysis?.length || 0)
-    console.log('   Document text available:', !!documentText)
+    // Truncate document text more aggressively for speed
+    const truncatedDoc = documentText ? 
+      (documentText.length > 1500 ? documentText.substring(0, 1500) + '...' : documentText) 
+      : null
 
-    return `You are an expert regulatory writing trainer with 20+ years of experience in investments, custody and clearing,securities services, FX, market access, market repatriation, financial market infrastructure, blockchain, digital assets, AI compliance. Your role is to provide constructive, professional feedback to help students improve their regulatory writing skills.
+    return `Expert regulatory writing analysis. Provide feedback in JSON format only.
 
-DOCUMENT CONTEXT:
-${documentText ? `Document Content: "${documentText.substring(0, 2000)}${documentText.length > 2000 ? '...' : ''}"` : 'No specific document context provided. Analyze based on general regulatory writing principles.'}
+${truncatedDoc ? `DOCUMENT: "${truncatedDoc}"` : 'CONTEXT: General regulatory writing principles'}
 
-STUDENT SUBMISSION:
-Executive Summary: "${executiveSummary || 'No executive summary provided'}"
-Impact Analysis: "${impactAnalysis || 'No impact analysis provided'}"
+SUBMISSION:
+Executive Summary: "${executiveSummary || 'Not provided'}"
+Impact Analysis: "${impactAnalysis || 'Not provided'}"
 
-ANALYSIS INSTRUCTIONS:
-Provide comprehensive writing feedback focusing on succinctness of summary, clarity of impacts to clients and stakeholders, article understanding, and professional communication standards. Evaluate the student's grasp of stakeholder considerations, key messages, main impacts and the reasons for the impacts to the stakeholder.
-Please provide a comprehensive analysis in this EXACT JSON structure (no markdown formatting):
+Return ONLY this JSON structure:
 
 {
-  "overallScore": [number 1-100],
+  "overallScore": [1-100],
   "executiveSummary": {
-    "score": [number 1-100],
-    "strengths": ["specific strength related to understanding", "specific strength related to communication and clarity", "specific strength related to professional writing"],
-    "improvements": ["specific improvement in taking stakeholder's viewpoints", "specific improvement for conciseness and clarity", "specific improvement for professional writing"],
-    "professionalExample": "Write a 2-3 sentence professional executive summary that demonstrates best practices for this type of market change content."
+    "score": [1-100],
+    "strengths": ["strength1", "strength2"],
+    "improvements": ["improvement1", "improvement2"],
+    "professionalExample": "Brief 2-3 sentence example"
   },
   "impactAnalysis": {
-    "score": [number 1-100],
-    "strengths": ["specific strength in stakeholder impact assessment", "specific strength in risks, change or implementation consideration", "specific strength in process understanding and key dates"],
-    "improvements": ["specific improvement deeper stakeholder impact analysis", "specific improvement in risks awareness, change implications or implementation difficulties", "specific improvement in implementation considerations including working backwards from key dates"],
-    "professionalExample": "Write a professional paragraph (3-4 sentences) demonstrating excellent impact analysis for this document context."
+    "score": [1-100],
+    "strengths": ["strength1", "strength2"],
+    "improvements": ["improvement1", "improvement2"],
+    "professionalExample": "Brief 3-4 sentence example"
   },
   "regulatoryCompliance": {
-    "score": [number 1-100],
-    "feedback": "Provide specific assessment of market change understanding and compliance awareness",
-    "missingElements": ["specific missing regulatory process or implemenation step", "specific missing compliance requirements", "specific missing dates or deadlines"]
+    "score": [1-100],
+    "feedback": "Brief compliance assessment",
+    "missingElements": ["element1", "element2"]
   },
   "writingQuality": {
-    "score": [number 1-100],
-    "clarity": [number 1-100],
-    "conciseness": [number 1-100],
-    "professionalism": [number 1-100],
-    "feedback": "Evaluate professional business communication standards including tone, structure, clarity, conciseness, professionalism and business writing style"
+    "score": [1-100],
+    "clarity": [1-100],
+    "conciseness": [1-100],
+    "professionalism": [1-100],
+    "feedback": "Brief writing assessment"
   },
-  "recommendations": [
-    "Focus analysis on compliance requirements, implementation steps, business and stakeholder ipmacts, risks analysis, timeline and key dates",
-    "Structure the executive summary to clearly state the main poitns and impacts to the stakeholders",
-    "Write the impact analysis to be specific to the document content, with clear points and reasons for the impacts"
-  ],
-  "nextSteps": [
-    "Concrete next step 1",
-    "Concrete next step 2"
-  ]
+  "recommendations": ["rec1", "rec2", "rec3"],
+  "nextSteps": ["step1", "step2"]
 }
 
-SCORING CRITERIA:
-- Overall Score: Weighted average emphasizing understanding (20%), business communication (20%), stakeholder analysis (20%), writing quality (40%)
-- Executive Summary: Evaluate business focus, stakeholder identification, inclusion of main impacts and professional communication
-- Impact Analysis: Identifies stakeholders. Shows change and risk understanding, include stakeholder impact and what they need to do, what important details do they need to know, and dates and deadlines
-- Market Change and RegulatoryCompliance: Answer includes costs, risks and timeline of proposed changes - where available; as well as next steps,compliance frameworks, and regulatory mapping
-- Writing Quality: Professional business communication standards, complete sentences, coherent structure, executive-appropriate tone
-
-CRITICAL FOCUS AREAS:
-1. Market Change and Regulatory Understanding to include where relevant: market access, FX, repatriation, tax, KYC, market structure, settlement, DVP, cash funding, custody, clearing
-2. Business vs Technical Focus: Prioritize business impact, compliance and risks implications, and regulatory considerations over technical specifications  
-3. Stakeholder Analysis: Identify affected parties, implications and reasons for the impacts, compliance responsibilities, and regulatory obligations
-4. Professional Communication: Complete sentences, executive-level language, clear structure, business-appropriate tone, concise and clear
-5. Risk Assessment: Includes where available compliance risks, regulatory penalties, implementation challenges, mitigation strategies, timeline and key dates
- 
-Respond with ONLY the JSON object, no additional text or formatting.`
+Focus on: compliance requirements, stakeholder impacts, implementation timelines, professional communication.`
   }
 
-  // Call Claude API with proper error handling - FIXED MODEL NAME
+  // OPTIMIZED: Reduced token count and faster API call
   async callClaudeAPI(prompt) {
-    console.log('🌐 Making API request to Claude...')
-    console.log('🔑 Using API key ending in:', this.apiKey.slice(-10))
-    
     const requestBody = {
-      // Use Claude Sonnet 4 (latest and most advanced)
-      model: 'claude-sonnet-4-20250514', // Claude Sonnet 4 - Latest model
-      max_tokens: 4000,
-      temperature: 0.3,
-      messages: [
-        {
-          role: 'user',
-          content: prompt
-        }
-      ]
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2500, // Reduced from 4000 for faster response
+      temperature: 0.2, // Slightly lower for more consistent/faster output
+      messages: [{ role: 'user', content: prompt }]
     }
 
-    console.log('📤 Using model:', requestBody.model)
-    console.log('📤 Request body prepared, making fetch call...')
+    const response = await fetch(this.apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': this.apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify(requestBody)
+    })
 
-    try {
-      const response = await fetch(this.apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': this.apiKey,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify(requestBody)
-      })
-
-      console.log('📡 API Response received, status:', response.status)
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('❌ Claude API HTTP Error:', response.status, errorText)
-        throw new Error(`Claude API HTTP ${response.status}: ${errorText}`)
-      }
-
-      const data = await response.json()
-      console.log('✅ API Response parsed successfully')
-      
-      if (!data.content || !data.content[0] || !data.content[0].text) {
-        console.error('❌ Invalid response format:', JSON.stringify(data, null, 2))
-        throw new Error('Invalid response format from Claude API')
-      }
-      
-      console.log('📄 Claude response text length:', data.content[0].text.length)
-      console.log('📄 Claude response preview:', data.content[0].text.substring(0, 200) + '...')
-      return data.content[0].text
-
-    } catch (error) {
-      console.error('❌ Fetch error details:')
-      console.error('   Error name:', error.name)
-      console.error('   Error message:', error.message)
-      throw error
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Claude API HTTP ${response.status}: ${errorText}`)
     }
+
+    const data = await response.json()
+    
+    if (!data.content?.[0]?.text) {
+      throw new Error('Invalid response format from Claude API')
+    }
+    
+    return data.content[0].text
   }
 
-  // Parse Claude response and structure it properly
-  parseClaudeResponse(response, submissionData) {
+  // OPTIMIZED: Faster response parsing with minimal validation
+  parseClaudeResponseFast(response, submissionData) {
     try {
-      console.log('🔍 Parsing Claude response...')
-      
-      // Clean the response - remove any markdown formatting
+      // Quick cleanup
       let cleanResponse = response.trim()
+        .replace(/^```json\s*/, '')
+        .replace(/\s*```$/, '')
+        .replace(/^```\s*/, '')
+        .replace(/\s*```$/, '')
       
-      // Remove markdown code blocks if present
-      if (cleanResponse.startsWith('```json')) {
-        cleanResponse = cleanResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '')
-        console.log('🧹 Removed json markdown blocks')
-      } else if (cleanResponse.startsWith('```')) {
-        cleanResponse = cleanResponse.replace(/^```\s*/, '').replace(/\s*```$/, '')
-        console.log('🧹 Removed markdown blocks')
-      }
-      
-      console.log('🧹 Cleaned response preview:', cleanResponse.substring(0, 200) + '...')
-      
-      // Parse JSON
       const analysis = JSON.parse(cleanResponse)
-      console.log('✅ JSON parsed successfully')
-      console.log('📊 Analysis overview:')
-      console.log('   - Overall score:', analysis.overallScore)
-      console.log('   - Executive summary score:', analysis.executiveSummary?.score)
-      console.log('   - Impact analysis score:', analysis.impactAnalysis?.score)
       
-      // Validate and ensure all required fields exist with defaults
-      const validatedAnalysis = {
+      // Fast validation with defaults
+      return {
         sessionId: submissionData.sessionId,
         timestamp: new Date().toISOString(),
-        overallScore: this.validateScore(analysis.overallScore),
+        overallScore: this.fastValidateScore(analysis.overallScore),
         executiveSummary: {
-          score: this.validateScore(analysis.executiveSummary?.score),
-          strengths: Array.isArray(analysis.executiveSummary?.strengths) 
-            ? analysis.executiveSummary.strengths.slice(0, 3)
-            : ['Clear structure', 'Professional tone'],
-          improvements: Array.isArray(analysis.executiveSummary?.improvements) 
-            ? analysis.executiveSummary.improvements.slice(0, 3)
-            : ['More specific details needed'],
-          professionalExample: analysis.executiveSummary?.professionalExample || 
-            'Professional example requires document context for optimal relevance.'
+          score: this.fastValidateScore(analysis.executiveSummary?.score),
+          strengths: this.fastValidateArray(analysis.executiveSummary?.strengths, 2, ['Clear structure', 'Professional tone']),
+          improvements: this.fastValidateArray(analysis.executiveSummary?.improvements, 2, ['More specific details needed']),
+          professionalExample: analysis.executiveSummary?.professionalExample || 'Professional example requires document context.'
         },
         impactAnalysis: {
-          score: this.validateScore(analysis.impactAnalysis?.score),
-          strengths: Array.isArray(analysis.impactAnalysis?.strengths) 
-            ? analysis.impactAnalysis.strengths.slice(0, 3)
-            : ['Good analytical approach'],
-          improvements: Array.isArray(analysis.impactAnalysis?.improvements) 
-            ? analysis.impactAnalysis.improvements.slice(0, 3)
-            : ['Consider broader implications'],
-          professionalExample: analysis.impactAnalysis?.professionalExample || 
-            'Professional example requires document context for optimal relevance.'
+          score: this.fastValidateScore(analysis.impactAnalysis?.score),
+          strengths: this.fastValidateArray(analysis.impactAnalysis?.strengths, 2, ['Good analytical approach']),
+          improvements: this.fastValidateArray(analysis.impactAnalysis?.improvements, 2, ['Consider broader implications']),
+          professionalExample: analysis.impactAnalysis?.professionalExample || 'Professional example requires document context.'
         },
         regulatoryCompliance: {
-          score: this.validateScore(analysis.regulatoryCompliance?.score),
-          feedback: analysis.regulatoryCompliance?.feedback || 
-            'Shows understanding of regulatory context with opportunities for deeper analysis.',
-          missingElements: Array.isArray(analysis.regulatoryCompliance?.missingElements) 
-            ? analysis.regulatoryCompliance.missingElements.slice(0, 3)
-            : []
+          score: this.fastValidateScore(analysis.regulatoryCompliance?.score),
+          feedback: analysis.regulatoryCompliance?.feedback || 'Shows understanding with opportunities for deeper analysis.',
+          missingElements: this.fastValidateArray(analysis.regulatoryCompliance?.missingElements, 3, [])
         },
         writingQuality: {
-          score: this.validateScore(analysis.writingQuality?.score),
-          clarity: this.validateScore(analysis.writingQuality?.clarity),
-          conciseness: this.validateScore(analysis.writingQuality?.conciseness),
-          professionalism: this.validateScore(analysis.writingQuality?.professionalism),
-          feedback: analysis.writingQuality?.feedback || 
-            'Professional writing style with opportunities for enhancement.'
+          score: this.fastValidateScore(analysis.writingQuality?.score),
+          clarity: this.fastValidateScore(analysis.writingQuality?.clarity),
+          conciseness: this.fastValidateScore(analysis.writingQuality?.conciseness),
+          professionalism: this.fastValidateScore(analysis.writingQuality?.professionalism),
+          feedback: analysis.writingQuality?.feedback || 'Professional writing with enhancement opportunities.'
         },
-        recommendations: Array.isArray(analysis.recommendations) 
-          ? analysis.recommendations.slice(0, 4)
-          : [
-            'Review regulatory requirements more thoroughly',
-            'Include specific implementation details',
-            'Consider stakeholder perspectives more broadly'
-          ],
-        nextSteps: Array.isArray(analysis.nextSteps) 
-          ? analysis.nextSteps.slice(0, 2)
-          : [
-            'Practice with additional regulatory scenarios',
-            'Focus on concise professional communication'
-          ],
+        recommendations: this.fastValidateArray(analysis.recommendations, 3, [
+          'Review regulatory requirements thoroughly',
+          'Include specific implementation details',
+          'Consider stakeholder perspectives broadly'
+        ]),
+        nextSteps: this.fastValidateArray(analysis.nextSteps, 2, [
+          'Practice with additional regulatory scenarios',
+          'Focus on concise professional communication'
+        ]),
         analysisType: 'claude-ai-real',
         studentAnswers: {
           executiveSummary: submissionData.answers.executiveSummary,
@@ -293,34 +200,18 @@ Respond with ONLY the JSON object, no additional text or formatting.`
         }
       }
       
-      console.log('✅ Claude response parsed and validated successfully')
-      return validatedAnalysis
-      
     } catch (parseError) {
-      console.error('❌ Failed to parse Claude response:', parseError.message)
-      console.log('📄 Raw Claude response preview:', response.substring(0, 500) + '...')
-      
-      // Create structured response from raw text as fallback
+      // Fast fallback without detailed logging
       return this.createStructuredFromText(response, submissionData)
     }
   }
 
-  // Enhanced demo mode with realistic professional examples
+  // OPTIMIZED: Pre-calculated demo responses for maximum speed
   generateEnhancedDemo(submissionData, errorMessage = null) {
     const { answers } = submissionData
-    const { executiveSummary, impactAnalysis } = answers
-
-    console.log('🎭 Generating enhanced demo analysis')
-    if (errorMessage) {
-      console.log('🔧 Demo reason:', errorMessage)
-    }
-
-    // Calculate scores based on content quality
-    const summaryScore = this.calculateContentScore(executiveSummary)
-    const analysisScore = this.calculateContentScore(impactAnalysis)
+    const summaryScore = this.fastCalculateScore(answers.executiveSummary)
+    const analysisScore = this.fastCalculateScore(answers.impactAnalysis)
     const overallScore = Math.round((summaryScore + analysisScore) / 2)
-
-    console.log(`📊 Enhanced demo analysis - Summary: ${summaryScore}, Analysis: ${analysisScore}, Overall: ${overallScore}`)
 
     return {
       sessionId: submissionData.sessionId,
@@ -330,55 +221,49 @@ Respond with ONLY the JSON object, no additional text or formatting.`
         score: summaryScore,
         strengths: [
           'Clear presentation of key information',
-          'Appropriate length for executive-level audience',
           'Professional tone maintained throughout'
         ],
         improvements: [
-          'Include specific regulatory deadlines and compliance timelines',
-          'Identify primary stakeholders and their roles more explicitly',
-          'Add quantitative impact estimates and cost implications'
+          'Include specific regulatory deadlines',
+          'Identify primary stakeholders explicitly'
         ],
-        professionalExample: 'The new Anti-Money Laundering Enhancement Act requires all financial institutions to implement advanced customer due diligence procedures by December 31, 2024, affecting approximately 12,000 banks and credit unions nationwide. The primary compliance objective is to strengthen transaction monitoring capabilities and reduce financial crime exposure, with estimated industry-wide implementation costs of $2.3 billion and enhanced reporting requirements to FinCEN.'
+        professionalExample: 'The new regulation requires all financial institutions to implement enhanced procedures by December 31, 2024, affecting compliance costs and operational workflows.'
       },
       impactAnalysis: {
         score: analysisScore,
         strengths: [
           'Systematic analytical framework applied',
-          'Recognition of implementation challenges',
-          'Awareness of multi-stakeholder implications'
+          'Recognition of implementation challenges'
         ],
         improvements: [
-          'Quantify financial and operational impacts more specifically',
-          'Include detailed risk mitigation strategies and contingency planning',
-          'Address compliance timeline variations based on institution size and complexity'
+          'Quantify financial impacts more specifically',
+          'Include detailed risk mitigation strategies'
         ],
-        professionalExample: 'Small community banks will face disproportionate implementation challenges due to limited compliance infrastructure, requiring 18-24 months for full deployment at estimated costs of $750,000-$1.2M per institution. Large multinational banks can leverage existing AML frameworks but must invest $25-50 million in system upgrades and staff training. Recommended phased implementation: Phase 1 (Q1-Q2 2024) - Policy development and regulatory mapping; Phase 2 (Q3-Q4 2024) - Technology deployment and integration testing; Phase 3 (Q1 2025) - Staff training and compliance validation.'
+        professionalExample: 'Small banks will face implementation challenges requiring 18-24 months and $750K-$1.2M investment, while large banks need $25-50M for system upgrades and staff training.'
       },
       regulatoryCompliance: {
         score: Math.round((summaryScore + analysisScore) / 2),
-        feedback: 'Demonstrates solid foundational understanding of regulatory framework with good awareness of compliance implications. To strengthen analysis, incorporate more specific regulatory citations, enforcement mechanisms, and cross-jurisdictional considerations.',
+        feedback: 'Demonstrates solid understanding with opportunities for more specific regulatory citations.',
         missingElements: [
-          'Specific penalty structures and enforcement timelines for non-compliance',
-          'Detailed regulatory reporting requirements and submission deadlines',
-          'International coordination aspects and cross-border compliance considerations'
+          'Specific penalty structures',
+          'Detailed reporting requirements'
         ]
       },
       writingQuality: {
         score: Math.round((summaryScore + analysisScore) / 2),
-        clarity: summaryScore > 80 ? 85 : 75,
-        conciseness: analysisScore > 80 ? 80 : 70,
+        clarity: Math.min(85, summaryScore + 5),
+        conciseness: Math.min(80, analysisScore),
         professionalism: 85,
-        feedback: 'Professional communication style with clear structure and appropriate tone for regulatory context. To enhance effectiveness, incorporate more specific quantitative data points, strengthen transitions between key concepts, and ensure consistent terminology throughout.'
+        feedback: 'Professional communication with opportunities for more quantitative data.'
       },
       recommendations: [
-        'Incorporate specific regulatory deadlines, compliance milestones, and enforcement timelines',
-        'Quantify financial and operational impacts with data-driven estimates and cost-benefit analysis',
-        'Develop comprehensive stakeholder-specific implementation strategies and communication plans',
-        'Include detailed risk assessment matrix with mitigation strategies and contingency planning'
+        'Incorporate specific regulatory deadlines',
+        'Quantify financial and operational impacts',
+        'Develop comprehensive stakeholder strategies'
       ],
       nextSteps: [
-        'Practice analyzing complex multi-stakeholder regulatory scenarios with quantitative impact modeling',
-        'Study successful regulatory implementation case studies and develop expertise in compliance project management'
+        'Practice with complex regulatory scenarios',
+        'Study compliance implementation case studies'
       ],
       analysisType: errorMessage ? 'enhanced-demo-error' : 'enhanced-demo',
       studentAnswers: {
@@ -389,98 +274,97 @@ Respond with ONLY the JSON object, no additional text or formatting.`
     }
   }
 
-  // Calculate content score based on length and quality indicators
-  calculateContentScore(text) {
+  // OPTIMIZED: Faster scoring algorithm
+  fastCalculateScore(text) {
     if (!text || text.length < 10) return 45
     
-    let score = 60 // Base score
+    const len = text.length
+    const lower = text.toLowerCase()
     
-    // Length bonus (optimal range 100-500 characters)
-    if (text.length >= 100 && text.length <= 500) score += 15
-    else if (text.length >= 50) score += 10
+    let score = 60
     
-    // Quality indicators
-    if (text.toLowerCase().includes('regulatory') || text.toLowerCase().includes('compliance')) score += 5
-    if (text.toLowerCase().includes('stakeholder')) score += 5
-    if (text.toLowerCase().includes('implementation')) score += 5
-    if (text.toLowerCase().includes('impact') || text.toLowerCase().includes('effect')) score += 5
-    if (text.split('.').length >= 3) score += 5 // Multiple sentences
+    // Quick length check
+    if (len >= 100 && len <= 500) score += 15
+    else if (len >= 50) score += 10
     
-    // Professional language indicators
-    if (text.toLowerCase().includes('require') || text.toLowerCase().includes('establish')) score += 3
-    if (text.toLowerCase().includes('timeline') || text.toLowerCase().includes('deadline')) score += 3
+    // Fast keyword scoring using single pass
+    const keywords = ['regulatory', 'compliance', 'stakeholder', 'implementation', 'impact', 'effect']
+    for (const keyword of keywords) {
+      if (lower.includes(keyword)) score += 5
+    }
+    
+    // Sentence count (approximate)
+    if ((text.match(/\./g) || []).length >= 3) score += 5
     
     return Math.min(95, Math.max(45, score))
   }
 
-  // Validate score is between 1-100
-  validateScore(score) {
+  // Fast helper functions
+  fastValidateScore(score) {
     const num = parseInt(score)
-    if (isNaN(num) || num < 1 || num > 100) return 75
-    return num
+    return (isNaN(num) || num < 1 || num > 100) ? 75 : num
   }
 
-  // Get document content for analysis context
+  fastValidateArray(arr, maxLength, defaultValue) {
+    return Array.isArray(arr) ? arr.slice(0, maxLength) : defaultValue
+  }
+
+  // OPTIMIZED: Async file reading with better error handling
   async getDocumentContent(documentId) {
     try {
       const metadataPath = path.join(__dirname, '../../uploads/metadata', `${documentId}.json`)
       const metadata = JSON.parse(await fs.readFile(metadataPath, 'utf8'))
-      console.log('📄 Document content loaded, length:', metadata.extractedText?.length || 0)
-      return metadata.extractedText || 'Document content not available for analysis'
+      return metadata.extractedText || null
     } catch (error) {
-      console.error('Error reading document content:', error)
-      return 'Document content not available for analysis'
+      // Silent fail for speed
+      return null
     }
   }
 
-  // Create structured response from unstructured text (fallback)
+  // OPTIMIZED: Minimal fallback response
   createStructuredFromText(text, submissionData) {
-    console.log('🔄 Creating structured response from unstructured Claude output')
-    
     return {
       sessionId: submissionData.sessionId,
       timestamp: new Date().toISOString(),
-      overallScore: 78,
+      overallScore: 75,
       executiveSummary: {
-        score: 80,
-        strengths: ['Professional communication style', 'Clear structural approach'],
-        improvements: ['More specific regulatory details needed', 'Include compliance timelines'],
-        professionalExample: 'The regulatory framework requires systematic implementation across affected institutions with clear milestone tracking, stakeholder engagement protocols, and comprehensive compliance validation procedures.'
+        score: 75,
+        strengths: ['Professional communication style'],
+        improvements: ['More specific regulatory details needed'],
+        professionalExample: 'Regulatory framework requires systematic implementation with clear milestone tracking.'
       },
       impactAnalysis: {
-        score: 76,
-        strengths: ['Good stakeholder awareness', 'Implementation considerations included'],
-        improvements: ['Quantify impacts more specifically', 'Include detailed risk mitigation strategies'],
-        professionalExample: 'Implementation will require coordinated efforts across legal, operations, and technology teams with estimated costs ranging from $500K-$2M depending on institution size, phased rollout over 12-18 months, and comprehensive staff training programs.'
+        score: 75,
+        strengths: ['Good stakeholder awareness'],
+        improvements: ['Quantify impacts more specifically'],
+        professionalExample: 'Implementation requires coordinated efforts with estimated costs and phased rollout.'
       },
       regulatoryCompliance: {
         score: 75,
-        feedback: 'Shows good regulatory understanding. Claude provided detailed feedback but in unstructured format requiring additional processing.',
-        missingElements: ['Specific compliance deadlines', 'Penalty structure considerations']
+        feedback: 'Shows good regulatory understanding requiring additional processing.',
+        missingElements: ['Specific compliance deadlines']
       },
       writingQuality: {
-        score: 78,
-        clarity: 80,
+        score: 75,
+        clarity: 75,
         conciseness: 75,
-        professionalism: 82,
-        feedback: 'Professional writing style with opportunities for more specific quantitative analysis and regulatory citations.'
+        professionalism: 80,
+        feedback: 'Professional writing with opportunities for quantitative analysis.'
       },
       recommendations: [
-        'Include specific regulatory citations and compliance deadlines',
-        'Quantify financial and operational impacts with supporting data',
-        'Develop comprehensive risk assessment and mitigation strategies',
-        'Enhance stakeholder communication and change management planning'
+        'Include specific regulatory citations',
+        'Quantify financial impacts',
+        'Develop risk assessment strategies'
       ],
       nextSteps: [
-        'Practice with additional complex regulatory scenarios',
-        'Develop expertise in quantitative compliance impact analysis'
+        'Practice with regulatory scenarios',
+        'Develop compliance expertise'
       ],
       analysisType: 'claude-ai-fallback',
       studentAnswers: {
         executiveSummary: submissionData.answers.executiveSummary,
         impactAnalysis: submissionData.answers.impactAnalysis
-      },
-      rawClaudeResponse: text.substring(0, 500) + '...'
+      }
     }
   }
 }

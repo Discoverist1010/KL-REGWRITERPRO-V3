@@ -57,7 +57,7 @@ class ClaudeService {
     }
   }
 
-  // OPTIMIZED: Two-part prompt for independent analysis + student evaluation
+  // OPTIMIZED: Shorter, more focused prompt for faster processing
   createOptimizedPrompt(submissionData, documentText) {
     const { answers } = submissionData
     const { executiveSummary, impactAnalysis } = answers
@@ -67,17 +67,13 @@ class ClaudeService {
       (documentText.length > 1500 ? documentText.substring(0, 1500) + '...' : documentText) 
       : null
 
-    return `You are an expert regulatory writing trainer. First provide YOUR OWN independent analysis, then evaluate the student's work.
+    return `Expert regulatory writing analysis. Provide feedback in JSON format only.
 
-${truncatedDoc ? `DOCUMENT: "${truncatedDoc}"` : 'CONTEXT: General regulatory writing scenario'}
+${truncatedDoc ? `DOCUMENT: "${truncatedDoc}"` : 'CONTEXT: General regulatory writing principles'}
 
-PART 1 - YOUR INDEPENDENT ANALYSIS:
-1. As a custodian/asset manager, write an executive summary covering: key regulatory change, main deadlines, primary compliance requirements
-2. As a custodian/asset manager, identify the 3 main impacts: operational changes, cost implications, timeline considerations
-
-PART 2 - STUDENT EVALUATION:
-Student Executive Summary: "${executiveSummary || 'Not provided'}"
-Student Impact Analysis: "${impactAnalysis || 'Not provided'}"
+SUBMISSION:
+Executive Summary: "${executiveSummary || 'Not provided'}"
+Impact Analysis: "${impactAnalysis || 'Not provided'}"
 
 Return ONLY this JSON structure:
 
@@ -87,13 +83,13 @@ Return ONLY this JSON structure:
     "score": [1-100],
     "strengths": ["strength1", "strength2"],
     "improvements": ["improvement1", "improvement2"],
-    "professionalExample": "YOUR independent executive summary (2-3 sentences covering key change, deadlines, compliance requirements)"
+    "professionalExample": "Brief 2-3 sentence example"
   },
   "impactAnalysis": {
     "score": [1-100],
     "strengths": ["strength1", "strength2"],
     "improvements": ["improvement1", "improvement2"],
-    "professionalExample": "YOUR independent impact analysis (3-4 sentences covering the 3 main impacts you identified as a custodian/asset manager)"
+    "professionalExample": "Brief 3-4 sentence example"
   },
   "regulatoryCompliance": {
     "score": [1-100],
@@ -111,7 +107,7 @@ Return ONLY this JSON structure:
   "nextSteps": ["step1", "step2"]
 }
 
-CRITICAL: The professionalExample fields must contain YOUR independent analysis, not improvements to the student's work.`
+Focus on: compliance requirements, stakeholder impacts, implementation timelines, professional communication.`
   }
 
   // OPTIMIZED: Reduced token count and faster API call
@@ -210,7 +206,7 @@ CRITICAL: The professionalExample fields must contain YOUR independent analysis,
     }
   }
 
-  // OPTIMIZED: Pre-calculated demo responses with independent analysis
+  // OPTIMIZED: Pre-calculated demo responses for maximum speed
   generateEnhancedDemo(submissionData, errorMessage = null) {
     const { answers } = submissionData
     const summaryScore = this.fastCalculateScore(answers.executiveSummary)
@@ -231,7 +227,7 @@ CRITICAL: The professionalExample fields must contain YOUR independent analysis,
           'Include specific regulatory deadlines',
           'Identify primary stakeholders explicitly'
         ],
-        professionalExample: 'The Enhanced Customer Due Diligence Rule requires all custodian banks and asset managers to implement advanced identity verification systems by March 31, 2025, with mandatory reporting to regulatory authorities beginning April 1, 2025. This regulation strengthens anti-money laundering frameworks and requires comprehensive client risk assessment protocols.'
+        professionalExample: 'The new regulation requires all financial institutions to implement enhanced procedures by December 31, 2024, affecting compliance costs and operational workflows.'
       },
       impactAnalysis: {
         score: analysisScore,
@@ -243,7 +239,7 @@ CRITICAL: The professionalExample fields must contain YOUR independent analysis,
           'Quantify financial impacts more specifically',
           'Include detailed risk mitigation strategies'
         ],
-        professionalExample: 'As custodians and asset managers, we face three critical impacts: (1) Operational changes requiring new client onboarding procedures and enhanced KYC documentation workflows, (2) Technology investments of approximately $2-5 million for mid-tier firms to upgrade compliance systems and data management platforms, and (3) Implementation timeline pressures necessitating immediate project initiation to meet the March 2025 deadline while maintaining business continuity.'
+        professionalExample: 'Small banks will face implementation challenges requiring 18-24 months and $750K-$1.2M investment, while large banks need $25-50M for system upgrades and staff training.'
       },
       regulatoryCompliance: {
         score: Math.round((summaryScore + analysisScore) / 2),
@@ -325,7 +321,7 @@ CRITICAL: The professionalExample fields must contain YOUR independent analysis,
     }
   }
 
-  // OPTIMIZED: Minimal fallback response with independent analysis
+  // OPTIMIZED: Minimal fallback response
   createStructuredFromText(text, submissionData) {
     return {
       sessionId: submissionData.sessionId,
@@ -335,13 +331,13 @@ CRITICAL: The professionalExample fields must contain YOUR independent analysis,
         score: 75,
         strengths: ['Professional communication style'],
         improvements: ['More specific regulatory details needed'],
-        professionalExample: 'The new Digital Asset Custody Framework requires implementation of enhanced security protocols by September 30, 2025, mandating multi-signature authentication and cold storage requirements for institutional custody providers. Compliance audits commence October 2025 with quarterly reporting obligations.'
+        professionalExample: 'Regulatory framework requires systematic implementation with clear milestone tracking.'
       },
       impactAnalysis: {
         score: 75,
         strengths: ['Good stakeholder awareness'],
         improvements: ['Quantify impacts more specifically'],
-        professionalExample: 'As custodians, we must address three primary impacts: (1) Infrastructure upgrades requiring $3-8 million investment in secure custody technology and staff training, (2) Operational restructuring to accommodate new client onboarding procedures and enhanced due diligence workflows, and (3) Timeline management challenges requiring immediate project mobilization to achieve the September 2025 compliance deadline.'
+        professionalExample: 'Implementation requires coordinated efforts with estimated costs and phased rollout.'
       },
       regulatoryCompliance: {
         score: 75,

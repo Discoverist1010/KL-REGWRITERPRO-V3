@@ -128,17 +128,17 @@ Please provide a comprehensive analysis in this EXACT JSON structure (no markdow
 
 SCORING CRITERIA:
 - Overall Score: Weighted average emphasizing understanding (20%), business communication (20%), stakeholder analysis (20%), writing quality (40%)
-- Executive Summary: Evaluate regulatory awareness, business focus, stakeholder identification, and professional communication
-- Impact Analysis: Assess change and risk understanding, stakeholder impact and what they need to do, what important details do they need to know, and dates and deadlines
-- Market Change and RegulatoryCompliance: Focus on costs, risks and timeline of proposed changes, next steps,compliance frameworks, and regulatory mapping
+- Executive Summary: Evaluate business focus, stakeholder identification, inclusion of main impacts and professional communication
+- Impact Analysis: Identifies stakeholders. Shows change and risk understanding, include stakeholder impact and what they need to do, what important details do they need to know, and dates and deadlines
+- Market Change and RegulatoryCompliance: Answer includes costs, risks and timeline of proposed changes - where available; as well as next steps,compliance frameworks, and regulatory mapping
 - Writing Quality: Professional business communication standards, complete sentences, coherent structure, executive-appropriate tone
 
 CRITICAL FOCUS AREAS:
-1. Market Change and Regulatory Understanding: market access, FX, repatriation, tax, KYC, market structure, settlement, DVP, cash funding, custody, clearing
+1. Market Change and Regulatory Understanding to include where relevant: market access, FX, repatriation, tax, KYC, market structure, settlement, DVP, cash funding, custody, clearing
 2. Business vs Technical Focus: Prioritize business impact, compliance and risks implications, and regulatory considerations over technical specifications  
 3. Stakeholder Analysis: Identify affected parties, implications and reasons for the impacts, compliance responsibilities, and regulatory obligations
 4. Professional Communication: Complete sentences, executive-level language, clear structure, business-appropriate tone, concise and clear
-5. Risk Assessment: Compliance risks, regulatory penalties, implementation challenges, mitigation strategies, timeline and key dates
+5. Risk Assessment: Includes where available compliance risks, regulatory penalties, implementation challenges, mitigation strategies, timeline and key dates
  
 Respond with ONLY the JSON object, no additional text or formatting.`
   }

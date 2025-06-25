@@ -44,7 +44,7 @@ class ClaudeService {
       // Call Claude API
       const response = await this.client.messages.create({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 2500,
+        max_tokens: 1500, // Reduced for faster response
         messages: [{
           role: 'user',
           content: prompt
@@ -81,15 +81,9 @@ ${executiveSummary}
 STUDENT'S IMPACT ANALYSIS:
 ${impactAnalysis}
 
-Please provide a comprehensive analysis of the student's submission. 
+Analyze the document and student submission. Base ALL professional examples on the ACTUAL DOCUMENT content.
 
-IMPORTANT INSTRUCTIONS:
-1. Writing Quality scores (clarity, conciseness, professionalism) MUST be based on evaluating the STUDENT'S ACTUAL ANSWERS, not generic scores
-2. Regulatory Compliance should analyze what compliance requirements are in the DOCUMENT, not the student's understanding
-3. Missing Elements should list key compliance points from the document that students should include
-4. Next Steps should provide 3 specific writing improvement tips based on the student's actual writing
-
-Format your response as JSON with the following EXACT structure:
+Format response as JSON:
 
 {
   "overallScore": [number 0-100],
@@ -97,22 +91,23 @@ Format your response as JSON with the following EXACT structure:
     "score": [number 0-100],
     "strengths": ["strength 1", "strength 2", "strength 3"],
     "improvements": ["improvement 1", "improvement 2", "improvement 3"],
-    "professionalExample": "A 2-3 sentence professional executive summary demonstrating best practices"
+    "professionalExample": "Write 2-3 sentences summarizing the ACTUAL regulatory content from this document"
   },
   "impactAnalysis": {
     "score": [number 0-100],
     "strengths": ["strength 1", "strength 2", "strength 3"],
     "improvements": ["improvement 1", "improvement 2", "improvement 3"],
-    "professionalExample": "A professional paragraph demonstrating excellent impact analysis"
+    "professionalExample": "Write impact analysis based on the ACTUAL implications discussed in this document"
   },
   "regulatoryCompliance": {
     "score": [number 0-100],
-    "feedback": "Based on the SOURCE DOCUMENT, provide: 
-      1. KEY COMPLIANCE POINTS: List 3-5 specific compliance requirements that are either explicitly stated OR can be reasonably inferred from the document's content. If no compliance requirements are evident or can be inferred, state: 'No specific compliance requirements identified in this document.'
-      2. RISK LINKAGE: For each identified compliance point, specify the risk type (operational/financial/reputational/legal/systemic)
-      3. CRITICAL ELEMENTS: Highlight any deadlines, thresholds, or mandatory actions
-      Example format: 'The document requires quarterly stress testing (operational risk) by Q2 2024, with minimum capital ratios of 8.5% (financial risk)'",
-    "missingElements": ["List compliance requirements (stated or inferable) from the document that the student missed. If no compliance requirements exist, return empty array. Format: 'Requirement - Risk Type - Why it matters'"]
+    "feedback": "Extract KEY DATES AND ACTIVITIES from the document:
+      • Implementation dates/deadlines
+      • Required activities/actions
+      • Reporting timelines
+      • Phase-in periods
+      Format: 'DATE: Activity (Risk type)'. If no dates/activities found, state 'No specific compliance dates or activities identified.'",
+    "missingElements": ["Key dates/activities from document the student missed. Format: 'DATE - Activity - Impact'"]
   },
   "writingQuality": {
     "score": [number 0-100 - overall writing quality based on student's actual text],
@@ -134,12 +129,9 @@ Format your response as JSON with the following EXACT structure:
   ]
 }
 
-Evaluation Guidelines:
-- Writing Quality: Analyze the ACTUAL text written by the student for clarity, conciseness, and professionalism
-- Regulatory Compliance: Identify what compliance requirements are IN THE DOCUMENT, not what the student wrote
-- Missing Elements: List specific compliance points from the document that the student should have included
-- Next Steps: Provide 3 specific writing tips based on weaknesses in the student's actual submission
-- All scores must reflect the student's actual performance, not generic values`;
+}
+
+Be concise. Base all examples on document content.`;
   }
 
   parseClaudeResponse(responseText, submissionData) {
@@ -254,7 +246,7 @@ Evaluation Guidelines:
       },
       regulatoryCompliance: {
         score: Math.round((summaryScore + analysisScore) / 2),
-        feedback: 'Based on the SOURCE DOCUMENT: Unable to perform detailed compliance analysis without access to the actual document. In a full analysis, this section would identify specific compliance requirements, link them to risk types (operational/financial/reputational/legal/systemic), and highlight critical deadlines or thresholds.',
+        feedback: 'Key dates and activities would be extracted from the source document. Example format: Q2 2024: Implementation of new reporting requirements (Operational risk)',
         missingElements: []
       },
       writingQuality: {

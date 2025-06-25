@@ -170,11 +170,93 @@ try {
   })
 }
 
+// Queue Status Endpoints
+const queueService = require('./services/queueService')
+
+// Get queue status
+app.get('/api/queue/status', (req, res) => {
+  console.log('📊 Queue status requested')
+  try {
+    const status = queueService.getQueueStatus()
+    res.json({
+      success: true,
+      data: status
+    })
+  } catch (error) {
+    console.error('❌ Queue status error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get queue status'
+    })
+  }
+})
+
+// Get estimated wait time
+app.get('/api/queue/wait-time', (req, res) => {
+  console.log('⏱️ Wait time requested')
+  try {
+    const waitTime = queueService.getEstimatedWaitTime()
+    res.json({
+      success: true,
+      data: waitTime
+    })
+  } catch (error) {
+    console.error('❌ Wait time error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get wait time'
+    })
+  }
+})
+
+// Pause queue (admin only - add auth in production!)
+app.post('/api/queue/pause', (req, res) => {
+  console.log('⏸️ Queue pause requested')
+  try {
+    queueService.pauseQueue()
+    res.json({
+      success: true,
+      message: 'Queue paused successfully'
+    })
+  } catch (error) {
+    console.error('❌ Queue pause error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to pause queue'
+    })
+  }
+})
+
+// Resume queue (admin only - add auth in production!)
+app.post('/api/queue/resume', (req, res) => {
+  console.log('▶️ Queue resume requested')
+  try {
+    queueService.resumeQueue()
+    res.json({
+      success: true,
+      message: 'Queue resumed successfully'
+    })
+  } catch (error) {
+    console.error('❌ Queue resume error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to resume queue'
+    })
+  }
+})
+
 // Diagnostics endpoint (from your original)
 app.get('/api/diagnostics', (req, res) => {
+  const queueStatus = queueService.getQueueStatus()
   res.json({
     timestamp: new Date().toISOString(),
     routes: routesStatus,
+    queue: {
+      size: queueStatus.queueSize,
+      pending: queueStatus.pending,
+      totalProcessed: queueStatus.totalProcessed,
+      totalErrors: queueStatus.totalErrors
+    },
     environment: {
       nodeVersion: process.version,
       platform: process.platform,

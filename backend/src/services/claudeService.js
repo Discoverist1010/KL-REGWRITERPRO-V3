@@ -1,221 +1,136 @@
-// backend/src/services/claudeService.js - OPTIMIZED for Speed
-const fs = require('fs').promises
-const path = require('path')
-
-// Ensure environment variables are loaded
-require('dotenv').config()
+// Claude AI Service for Regulatory Writing Analysis
+const Anthropic = require('@anthropic-ai/sdk');
 
 class ClaudeService {
   constructor() {
-    this.apiKey = process.env.CLAUDE_API_KEY
-    this.apiUrl = 'https://api.anthropic.com/v1/messages'
+    this.apiKey = process.env.CLAUDE_API_KEY;
+    this.client = this.apiKey ? new Anthropic({ apiKey: this.apiKey }) : null;
+    this.initialized = !!this.client;
     
-    // Reduced logging for production performance
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔧 Claude Service Initialization:')
-      console.log('   API Key exists:', !!this.apiKey)
-      console.log('   API Key format valid:', this.apiKey?.startsWith('sk-ant-'))
-    }
-    
-    if (!this.apiKey) {
-      console.log('⚠️ Claude AI service initialized in demo mode (no API key)')
+    if (this.initialized) {
+      console.log('✅ Claude AI service initialized');
+    } else {
+      console.log('⚠️  Claude AI service not initialized - API key missing');
     }
   }
 
-  // Main analysis function - OPTIMIZED
-  async analyzeRegulatoryWriting(submissionData, documentContent = null) {
+  async analyzeRegulatoryWriting(submissionData, documentText) {
+    console.log('🤖 Claude AI analyzing regulatory writing...');
+    
+    // If no API key, return placeholder
+    if (!this.initialized) {
+      return this.generatePlaceholderAnalysis(submissionData);
+    }
+
+    const { answers, language = 'english' } = submissionData;
+    const { executiveSummary, impactAnalysis } = answers;
+
     try {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🚀 Starting Claude AI analysis for session:', submissionData.sessionId)
-      }
+      // Prepare the prompt for Claude
+      const prompt = this.buildAnalysisPrompt(
+        documentText || '',
+        executiveSummary || '',
+        impactAnalysis || '',
+        language
+      );
 
-      if (!this.apiKey) {
-        return this.generateEnhancedDemo(submissionData)
-      }
+      // Call Claude API
+      const response = await this.client.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2500,
+        messages: [{
+          role: 'user',
+          content: prompt
+        }]
+      });
 
-      // Parallel document fetch and prompt creation when possible
-      const [documentText, prompt] = await Promise.all([
-        documentContent || (submissionData.documentId ? this.getDocumentContent(submissionData.documentId) : Promise.resolve(null)),
-        Promise.resolve(this.createOptimizedPrompt(submissionData, documentContent))
-      ])
-
-      // Update prompt with document text if we fetched it
-      const finalPrompt = documentContent ? prompt : this.createOptimizedPrompt(submissionData, documentText)
-
-      // Call Claude API with optimized settings
-      const response = await this.callClaudeAPI(finalPrompt)
-
-      // Fast response parsing
-      const analysis = this.parseClaudeResponseFast(response, submissionData)
-
-      return analysis
+      // Parse Claude's response
+      const analysisText = response.content[0].text;
+      const analysis = this.parseClaudeResponse(analysisText, submissionData);
+      
+      console.log('✅ Claude AI analysis completed');
+      return analysis;
 
     } catch (error) {
-      console.error('❌ Claude AI analysis error:', error.message)
-      // Fast fallback without detailed error logging
-      return this.generateEnhancedDemo(submissionData, `Claude API Error: ${error.message}`)
+      console.error('❌ Claude API error:', error.message);
+      throw error; // Let the queue handle retries
     }
   }
 
-  // OPTIMIZED: Two-part prompt for independent analysis + student evaluation
-  createOptimizedPrompt(submissionData, documentText) {
-    const { answers } = submissionData
-    const { executiveSummary, impactAnalysis } = answers
+  buildAnalysisPrompt(documentText, executiveSummary, impactAnalysis, language) {
+    // Truncate document to manage token usage
+    const truncatedDoc = documentText.substring(0, 1500);
+    
+    return `You are an expert regulatory analyst. Analyze the following student submission for a regulatory writing exercise.
 
-    // Truncate document text more aggressively for speed
-    const truncatedDoc = documentText ? 
-      (documentText.length > 1500 ? documentText.substring(0, 1500) + '...' : documentText) 
-      : null
+Language: ${language}
 
-    return `You are an expert regulatory writing trainer. First provide YOUR OWN independent analysis, then evaluate the student's work.
+DOCUMENT EXCERPT:
+${truncatedDoc}
 
-${truncatedDoc ? `DOCUMENT: "${truncatedDoc}"` : 'CONTEXT: General regulatory writing scenario'}
+STUDENT'S EXECUTIVE SUMMARY:
+${executiveSummary}
 
-PART 1 - YOUR INDEPENDENT ANALYSIS:
-1. As a custodian/asset manager, write an executive summary covering: key regulatory change, main deadlines, primary compliance requirements
-2. As a custodian/asset manager, identify the 3 main impacts: operational changes, cost implications, timeline considerations
+STUDENT'S IMPACT ANALYSIS:
+${impactAnalysis}
 
-PART 2 - STUDENT EVALUATION:
-Student Executive Summary: "${executiveSummary || 'Not provided'}"
-Student Impact Analysis: "${impactAnalysis || 'Not provided'}"
+Please provide:
+1. A score (0-100) for the executive summary
+2. A professional example of how the executive summary should be written
+3. Specific feedback on the student's executive summary
+4. A score (0-100) for the impact analysis
+5. A professional example of how the impact analysis should be written
+6. Specific feedback on the student's impact analysis
+7. An overall score (0-100)
 
-Return ONLY this JSON structure:
-
+Format your response as JSON with the following structure:
 {
-  "overallScore": [1-100],
   "executiveSummary": {
-    "score": [1-100],
-    "strengths": ["strength1", "strength2"],
-    "improvements": ["improvement1", "improvement2"],
-    "professionalExample": "YOUR independent executive summary (2-3 sentences covering key change, deadlines, compliance requirements)"
+    "score": number,
+    "professionalExample": "string",
+    "feedback": "string"
   },
   "impactAnalysis": {
-    "score": [1-100],
-    "strengths": ["strength1", "strength2"],
-    "improvements": ["improvement1", "improvement2"],
-    "professionalExample": "YOUR independent impact analysis (3-4 sentences covering the 3 main impacts you identified as a custodian/asset manager)"
+    "score": number,
+    "professionalExample": "string",
+    "feedback": "string"
   },
-  "regulatoryCompliance": {
-    "score": [1-100],
-    "feedback": "Brief compliance assessment",
-    "missingElements": ["element1", "element2"]
-  },
-  "writingQuality": {
-    "score": [1-100],
-    "clarity": [1-100],
-    "conciseness": [1-100],
-    "professionalism": [1-100],
-    "feedback": "Brief writing assessment"
-  },
-  "recommendations": ["rec1", "rec2", "rec3"],
-  "nextSteps": ["step1", "step2"]
-}
-
-CRITICAL: The professionalExample fields must contain YOUR independent analysis, not improvements to the student's work.`
+  "overallScore": number
+}`;
   }
 
-  // OPTIMIZED: Reduced token count and faster API call
-  async callClaudeAPI(prompt) {
-    const requestBody = {
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2500, // Reduced from 4000 for faster response
-      temperature: 0.2, // Slightly lower for more consistent/faster output
-      messages: [{ role: 'user', content: prompt }]
-    }
-
-    const response = await fetch(this.apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': this.apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify(requestBody)
-    })
-
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Claude API HTTP ${response.status}: ${errorText}`)
-    }
-
-    const data = await response.json()
-    
-    if (!data.content?.[0]?.text) {
-      throw new Error('Invalid response format from Claude API')
-    }
-    
-    return data.content[0].text
-  }
-
-  // OPTIMIZED: Faster response parsing with minimal validation
-  parseClaudeResponseFast(response, submissionData) {
+  parseClaudeResponse(responseText, submissionData) {
     try {
-      // Quick cleanup
-      let cleanResponse = response.trim()
-        .replace(/^```json\s*/, '')
-        .replace(/\s*```$/, '')
-        .replace(/^```\s*/, '')
-        .replace(/\s*```$/, '')
-      
-      const analysis = JSON.parse(cleanResponse)
-      
-      // Fast validation with defaults
-      return {
-        sessionId: submissionData.sessionId,
-        timestamp: new Date().toISOString(),
-        overallScore: this.fastValidateScore(analysis.overallScore),
-        executiveSummary: {
-          score: this.fastValidateScore(analysis.executiveSummary?.score),
-          strengths: this.fastValidateArray(analysis.executiveSummary?.strengths, 2, ['Clear structure', 'Professional tone']),
-          improvements: this.fastValidateArray(analysis.executiveSummary?.improvements, 2, ['More specific details needed']),
-          professionalExample: analysis.executiveSummary?.professionalExample || 'Professional example requires document context.'
-        },
-        impactAnalysis: {
-          score: this.fastValidateScore(analysis.impactAnalysis?.score),
-          strengths: this.fastValidateArray(analysis.impactAnalysis?.strengths, 2, ['Good analytical approach']),
-          improvements: this.fastValidateArray(analysis.impactAnalysis?.improvements, 2, ['Consider broader implications']),
-          professionalExample: analysis.impactAnalysis?.professionalExample || 'Professional example requires document context.'
-        },
-        regulatoryCompliance: {
-          score: this.fastValidateScore(analysis.regulatoryCompliance?.score),
-          feedback: analysis.regulatoryCompliance?.feedback || 'Shows understanding with opportunities for deeper analysis.',
-          missingElements: this.fastValidateArray(analysis.regulatoryCompliance?.missingElements, 3, [])
-        },
-        writingQuality: {
-          score: this.fastValidateScore(analysis.writingQuality?.score),
-          clarity: this.fastValidateScore(analysis.writingQuality?.clarity),
-          conciseness: this.fastValidateScore(analysis.writingQuality?.conciseness),
-          professionalism: this.fastValidateScore(analysis.writingQuality?.professionalism),
-          feedback: analysis.writingQuality?.feedback || 'Professional writing with enhancement opportunities.'
-        },
-        recommendations: this.fastValidateArray(analysis.recommendations, 3, [
-          'Review regulatory requirements thoroughly',
-          'Include specific implementation details',
-          'Consider stakeholder perspectives broadly'
-        ]),
-        nextSteps: this.fastValidateArray(analysis.nextSteps, 2, [
-          'Practice with additional regulatory scenarios',
-          'Focus on concise professional communication'
-        ]),
-        analysisType: 'claude-ai-real',
-        studentAnswers: {
-          executiveSummary: submissionData.answers.executiveSummary,
-          impactAnalysis: submissionData.answers.impactAnalysis
-        }
+      // Try to extract JSON from the response
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          sessionId: submissionData.sessionId,
+          timestamp: new Date().toISOString(),
+          overallScore: parsed.overallScore || 75,
+          executiveSummary: parsed.executiveSummary || {},
+          impactAnalysis: parsed.impactAnalysis || {},
+          analysisType: 'claude-ai',
+          model: 'claude-sonnet-4-20250514'
+        };
       }
-      
-    } catch (parseError) {
-      // Fast fallback without detailed logging
-      return this.createStructuredFromText(response, submissionData)
+    } catch (error) {
+      console.error('Failed to parse Claude response:', error);
     }
+
+    // Fallback if parsing fails
+    return this.generatePlaceholderAnalysis(submissionData);
   }
 
-  // OPTIMIZED: Pre-calculated demo responses with independent analysis
-  generateEnhancedDemo(submissionData, errorMessage = null) {
-    const { answers } = submissionData
-    const summaryScore = this.fastCalculateScore(answers.executiveSummary)
-    const analysisScore = this.fastCalculateScore(answers.impactAnalysis)
-    const overallScore = Math.round((summaryScore + analysisScore) / 2)
+  generatePlaceholderAnalysis(submissionData) {
+    const { answers } = submissionData;
+    const { executiveSummary, impactAnalysis } = answers || {};
+
+    // Simple scoring based on content length
+    const summaryScore = Math.min(100, Math.round((executiveSummary?.length || 0) / 5));
+    const analysisScore = Math.min(100, Math.round((impactAnalysis?.length || 0) / 5));
+    const overallScore = Math.round((summaryScore + analysisScore) / 2);
 
     return {
       sessionId: submissionData.sessionId,
@@ -223,154 +138,18 @@ CRITICAL: The professionalExample fields must contain YOUR independent analysis,
       overallScore,
       executiveSummary: {
         score: summaryScore,
-        strengths: [
-          'Clear presentation of key information',
-          'Professional tone maintained throughout'
-        ],
-        improvements: [
-          'Include specific regulatory deadlines',
-          'Identify primary stakeholders explicitly'
-        ],
-        professionalExample: 'The Enhanced Customer Due Diligence Rule requires all custodian banks and asset managers to implement advanced identity verification systems by March 31, 2025, with mandatory reporting to regulatory authorities beginning April 1, 2025. This regulation strengthens anti-money laundering frameworks and requires comprehensive client risk assessment protocols.'
+        professionalExample: "The regulatory document introduces new requirements for financial institutions regarding capital adequacy and risk management procedures.",
+        feedback: "This is a placeholder analysis. Connect Claude AI for real feedback."
       },
       impactAnalysis: {
         score: analysisScore,
-        strengths: [
-          'Systematic analytical framework applied',
-          'Recognition of implementation challenges'
-        ],
-        improvements: [
-          'Quantify financial impacts more specifically',
-          'Include detailed risk mitigation strategies'
-        ],
-        professionalExample: 'As custodians and asset managers, we face three critical impacts: (1) Operational changes requiring new client onboarding procedures and enhanced KYC documentation workflows, (2) Technology investments of approximately $2-5 million for mid-tier firms to upgrade compliance systems and data management platforms, and (3) Implementation timeline pressures necessitating immediate project initiation to meet the March 2025 deadline while maintaining business continuity.'
+        professionalExample: "Financial institutions will need to update their compliance frameworks and reporting systems by Q2 2024 to meet the new requirements.",
+        feedback: "This is a placeholder analysis. Connect Claude AI for real feedback."
       },
-      regulatoryCompliance: {
-        score: Math.round((summaryScore + analysisScore) / 2),
-        feedback: 'Demonstrates solid understanding with opportunities for more specific regulatory citations.',
-        missingElements: [
-          'Specific penalty structures',
-          'Detailed reporting requirements'
-        ]
-      },
-      writingQuality: {
-        score: Math.round((summaryScore + analysisScore) / 2),
-        clarity: Math.min(85, summaryScore + 5),
-        conciseness: Math.min(80, analysisScore),
-        professionalism: 85,
-        feedback: 'Professional communication with opportunities for more quantitative data.'
-      },
-      recommendations: [
-        'Incorporate specific regulatory deadlines',
-        'Quantify financial and operational impacts',
-        'Develop comprehensive stakeholder strategies'
-      ],
-      nextSteps: [
-        'Practice with complex regulatory scenarios',
-        'Study compliance implementation case studies'
-      ],
-      analysisType: errorMessage ? 'enhanced-demo-error' : 'enhanced-demo',
-      studentAnswers: {
-        executiveSummary: answers.executiveSummary,
-        impactAnalysis: answers.impactAnalysis
-      },
-      ...(errorMessage && { errorMessage })
-    }
-  }
-
-  // OPTIMIZED: Faster scoring algorithm
-  fastCalculateScore(text) {
-    if (!text || text.length < 10) return 45
-    
-    const len = text.length
-    const lower = text.toLowerCase()
-    
-    let score = 60
-    
-    // Quick length check
-    if (len >= 100 && len <= 500) score += 15
-    else if (len >= 50) score += 10
-    
-    // Fast keyword scoring using single pass
-    const keywords = ['regulatory', 'compliance', 'stakeholder', 'implementation', 'impact', 'effect']
-    for (const keyword of keywords) {
-      if (lower.includes(keyword)) score += 5
-    }
-    
-    // Sentence count (approximate)
-    if ((text.match(/\./g) || []).length >= 3) score += 5
-    
-    return Math.min(95, Math.max(45, score))
-  }
-
-  // Fast helper functions
-  fastValidateScore(score) {
-    const num = parseInt(score)
-    return (isNaN(num) || num < 1 || num > 100) ? 75 : num
-  }
-
-  fastValidateArray(arr, maxLength, defaultValue) {
-    return Array.isArray(arr) ? arr.slice(0, maxLength) : defaultValue
-  }
-
-  // OPTIMIZED: Async file reading with better error handling
-  async getDocumentContent(documentId) {
-    try {
-      const metadataPath = path.join(__dirname, '../../uploads/metadata', `${documentId}.json`)
-      const metadata = JSON.parse(await fs.readFile(metadataPath, 'utf8'))
-      return metadata.extractedText || null
-    } catch (error) {
-      // Silent fail for speed
-      return null
-    }
-  }
-
-  // OPTIMIZED: Minimal fallback response with independent analysis
-  createStructuredFromText(text, submissionData) {
-    return {
-      sessionId: submissionData.sessionId,
-      timestamp: new Date().toISOString(),
-      overallScore: 75,
-      executiveSummary: {
-        score: 75,
-        strengths: ['Professional communication style'],
-        improvements: ['More specific regulatory details needed'],
-        professionalExample: 'The new Digital Asset Custody Framework requires implementation of enhanced security protocols by September 30, 2025, mandating multi-signature authentication and cold storage requirements for institutional custody providers. Compliance audits commence October 2025 with quarterly reporting obligations.'
-      },
-      impactAnalysis: {
-        score: 75,
-        strengths: ['Good stakeholder awareness'],
-        improvements: ['Quantify impacts more specifically'],
-        professionalExample: 'As custodians, we must address three primary impacts: (1) Infrastructure upgrades requiring $3-8 million investment in secure custody technology and staff training, (2) Operational restructuring to accommodate new client onboarding procedures and enhanced due diligence workflows, and (3) Timeline management challenges requiring immediate project mobilization to achieve the September 2025 compliance deadline.'
-      },
-      regulatoryCompliance: {
-        score: 75,
-        feedback: 'Shows good regulatory understanding requiring additional processing.',
-        missingElements: ['Specific compliance deadlines']
-      },
-      writingQuality: {
-        score: 75,
-        clarity: 75,
-        conciseness: 75,
-        professionalism: 80,
-        feedback: 'Professional writing with opportunities for quantitative analysis.'
-      },
-      recommendations: [
-        'Include specific regulatory citations',
-        'Quantify financial impacts',
-        'Develop risk assessment strategies'
-      ],
-      nextSteps: [
-        'Practice with regulatory scenarios',
-        'Develop compliance expertise'
-      ],
-      analysisType: 'claude-ai-fallback',
-      studentAnswers: {
-        executiveSummary: submissionData.answers.executiveSummary,
-        impactAnalysis: submissionData.answers.impactAnalysis
-      }
-    }
+      analysisType: 'placeholder'
+    };
   }
 }
 
-module.exports = new ClaudeService()
+// Export singleton instance
+module.exports = new ClaudeService();

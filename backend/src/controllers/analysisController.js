@@ -14,6 +14,9 @@ try {
   claudeService = null
 }
 
+// Import queue service
+const queueService = require('../services/queueService')
+
 // Submit student answers for analysis
 const submitAnalysis = async (req, res) => {
   try {
@@ -76,8 +79,27 @@ const submitAnalysis = async (req, res) => {
     
     if (claudeService) {
       try {
-        analysis = await claudeService.analyzeRegulatoryWriting(submissionData, documentContent)
-        console.log('✅ Claude AI analysis completed')
+        // Use queue service to manage Claude API calls
+        console.log('📋 Adding analysis to queue...')
+        
+        // Prepare data for the queue
+        const queueData = {
+          sessionCode: sessionId,
+          studentSummary: answers.summary || '',
+          studentImpact: answers.impact || '',
+          documentText: documentContent || '',
+          language: submissionData.language || 'english',
+          priority: 0, // Standard priority
+          allowDemoFallback: true
+        }
+        
+        // Get estimated wait time
+        const waitTime = queueService.getEstimatedWaitTime()
+        console.log(`⏱️ Estimated wait time: ${waitTime.humanReadable}`)
+        
+        // Queue the analysis
+        analysis = await queueService.queueAnalysis(queueData)
+        console.log('✅ Claude AI analysis completed via queue')
       } catch (error) {
         console.error('❌ Claude AI error, falling back to placeholder:', error.message)
         analysis = generatePlaceholderAnalysis(submissionData)

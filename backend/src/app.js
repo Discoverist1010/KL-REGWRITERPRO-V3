@@ -12,7 +12,7 @@ let isAppReady = false
 setTimeout(() => {
   isAppReady = true
   console.log('✅ Application ready for health checks')
-}, 8000) // 8 second delay for all services to initialize
+}, 5000) // 5 second delay for all services to initialize
 
 console.log('🚀 KL RegWriter Pro V3 Backend - RESTORED ARCHITECTURE')
 console.log('📊 Startup Diagnostics:')

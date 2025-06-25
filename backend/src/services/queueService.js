@@ -3,21 +3,21 @@ const Bottleneck = require('bottleneck');
 const claudeService = require('./claudeService');
 
 // Rate limiter configuration based on Claude API limits
-// Adjust these values based on your Claude API tier
+// Configuration for Claude Max tier
 const limiter = new Bottleneck({
-  minTime: 12000, // 12 seconds between requests (5 requests per minute)
-  maxConcurrent: 1, // Process one request at a time
-  reservoir: 5, // Initial capacity of 5 requests
-  reservoirRefreshAmount: 5, // Refill to 5 requests
+  minTime: 1000, // 1 second between requests
+  maxConcurrent: 6, // Process 6 requests concurrently
+  reservoir: 500, // Initial capacity of 500 requests
+  reservoirRefreshAmount: 400, // Refill to 400 requests
   reservoirRefreshInterval: 60 * 1000, // Refill every minute
   strategy: Bottleneck.strategy.LEAK, // Drop oldest jobs if overloaded
 });
 
 // Queue configuration with concurrency control
 const queue = new PQueue({ 
-  concurrency: 1, // Process one job at a time
-  interval: 12000, // Minimum 12 seconds between job starts
-  intervalCap: 1, // Allow 1 job per interval
+  concurrency: 6, // Process up to 6 jobs concurrently
+  interval: 1000, // Minimum 1 second between job starts
+  intervalCap: 6, // Allow up to 6 jobs per interval
   timeout: 300000, // 5 minute timeout per job
   throwOnTimeout: true
 });
@@ -229,8 +229,9 @@ function clearQueue() {
 
 // Function to get estimated wait time for a new job
 function getEstimatedWaitTime() {
-  // Each job takes minimum 12 seconds due to rate limiting
-  const estimatedSeconds = (queue.size + queue.pending) * 12;
+  // With 6 concurrent jobs and 1 second minimum time
+  const totalJobs = queue.size + queue.pending;
+  const estimatedSeconds = Math.ceil(totalJobs / 6) * 1;
   return {
     seconds: estimatedSeconds,
     minutes: Math.ceil(estimatedSeconds / 60),

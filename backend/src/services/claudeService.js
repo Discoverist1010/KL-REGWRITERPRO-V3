@@ -107,8 +107,12 @@ Format your response as JSON with the following EXACT structure:
   },
   "regulatoryCompliance": {
     "score": [number 0-100],
-    "feedback": "Analysis of the actual compliance requirements found in the DOCUMENT (not student's understanding)",
-    "missingElements": ["Key compliance point from document that student should include", "Another compliance requirement from document that was missed"]
+    "feedback": "Based on the SOURCE DOCUMENT, provide: 
+      1. KEY COMPLIANCE POINTS: List 3-5 specific compliance requirements that are either explicitly stated OR can be reasonably inferred from the document's content. If no compliance requirements are evident or can be inferred, state: 'No specific compliance requirements identified in this document.'
+      2. RISK LINKAGE: For each identified compliance point, specify the risk type (operational/financial/reputational/legal/systemic)
+      3. CRITICAL ELEMENTS: Highlight any deadlines, thresholds, or mandatory actions
+      Example format: 'The document requires quarterly stress testing (operational risk) by Q2 2024, with minimum capital ratios of 8.5% (financial risk)'",
+    "missingElements": ["List compliance requirements (stated or inferable) from the document that the student missed. If no compliance requirements exist, return empty array. Format: 'Requirement - Risk Type - Why it matters'"]
   },
   "writingQuality": {
     "score": [number 0-100 - overall writing quality based on student's actual text],
@@ -250,12 +254,8 @@ Evaluation Guidelines:
       },
       regulatoryCompliance: {
         score: Math.round((summaryScore + analysisScore) / 2),
-        feedback: 'Demonstrates understanding of regulatory framework with opportunities for deeper analysis. Consider incorporating specific regulatory citations and enforcement mechanisms.',
-        missingElements: [
-          'Specific penalty structures for non-compliance',
-          'Regulatory reporting requirements',
-          'International coordination aspects'
-        ]
+        feedback: 'Based on the SOURCE DOCUMENT: Unable to perform detailed compliance analysis without access to the actual document. In a full analysis, this section would identify specific compliance requirements, link them to risk types (operational/financial/reputational/legal/systemic), and highlight critical deadlines or thresholds.',
+        missingElements: []
       },
       writingQuality: {
         score: writingScore,

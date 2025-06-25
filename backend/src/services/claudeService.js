@@ -24,6 +24,13 @@ class ClaudeService {
 
     const { answers, language = 'english' } = submissionData;
     const { executiveSummary, impactAnalysis } = answers;
+    
+    console.log('📝 Student answers received:', {
+      executiveSummaryLength: executiveSummary?.length || 0,
+      impactAnalysisLength: impactAnalysis?.length || 0,
+      executiveSummaryPreview: executiveSummary?.substring(0, 100) || 'No summary provided',
+      impactAnalysisPreview: impactAnalysis?.substring(0, 100) || 'No impact analysis provided'
+    });
 
     try {
       // Prepare the prompt for Claude

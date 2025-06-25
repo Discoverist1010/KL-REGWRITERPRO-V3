@@ -85,8 +85,8 @@ const submitAnalysis = async (req, res) => {
         // Prepare data for the queue
         const queueData = {
           sessionCode: sessionId,
-          studentSummary: answers.summary || '',
-          studentImpact: answers.impact || '',
+          studentSummary: answers.executiveSummary || '',
+          studentImpact: answers.impactAnalysis || '',
           documentText: documentContent || '',
           language: submissionData.language || 'english',
           priority: 0, // Standard priority

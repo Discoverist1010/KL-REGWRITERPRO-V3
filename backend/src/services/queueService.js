@@ -73,6 +73,13 @@ async function queueAnalysis(analysisData, retries = 3) {
             documentId: analysisData.documentId || null
           };
           
+          console.log('[Queue] Submission data prepared:', {
+            hasExecutiveSummary: !!submissionData.answers.executiveSummary,
+            executiveSummaryLength: submissionData.answers.executiveSummary?.length || 0,
+            hasImpactAnalysis: !!submissionData.answers.impactAnalysis,
+            impactAnalysisLength: submissionData.answers.impactAnalysis?.length || 0
+          });
+          
           return await claudeService.analyzeRegulatoryWriting(
             submissionData,
             analysisData.documentText

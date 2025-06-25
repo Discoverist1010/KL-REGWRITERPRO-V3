@@ -110,22 +110,70 @@ async function queueAnalysis(analysisData, retries = 3) {
     // Fallback to demo mode as last resort
     if (analysisData.allowDemoFallback !== false) {
       console.log(`[Queue] Falling back to demo mode for job ${jobId}`);
-      // Generate placeholder analysis as fallback
+      // Generate placeholder analysis as fallback with complete structure
       const placeholderAnalysis = {
         sessionId: analysisData.sessionCode,
         timestamp: new Date().toISOString(),
         overallScore: 75,
         executiveSummary: {
           score: 80,
-          professionalExample: "This is a demo executive summary.",
-          feedback: "Demo mode - actual AI analysis unavailable"
+          strengths: [
+            'Clear structure provided',
+            'Professional tone attempted',
+            'Key points addressed'
+          ],
+          improvements: [
+            'Add specific regulatory details',
+            'Include timeline information',
+            'Quantify impacts'
+          ],
+          professionalExample: "The regulatory framework requires financial institutions to implement enhanced risk management procedures by Q4 2024, affecting 12,000 institutions with estimated compliance costs of $2.3 billion industry-wide."
         },
         impactAnalysis: {
           score: 70,
-          professionalExample: "This is a demo impact analysis.",
-          feedback: "Demo mode - actual AI analysis unavailable"
+          strengths: [
+            'Stakeholder identification attempted',
+            'Implementation considerations noted',
+            'Clear analysis structure'
+          ],
+          improvements: [
+            'Provide more specific impacts',
+            'Include mitigation strategies',
+            'Add cost-benefit analysis'
+          ],
+          professionalExample: "Implementation will vary by institution size: community banks require 18-24 months at $850K average cost, while large banks need $25-50M for system upgrades. Phased approach recommended: Policy (Months 1-6), Technology (Months 7-12), Validation (Months 13-18)."
         },
+        regulatoryCompliance: {
+          score: 75,
+          feedback: 'Basic regulatory understanding demonstrated. Analysis unavailable due to system limitations.',
+          missingElements: [
+            'Specific compliance deadlines',
+            'Penalty structures',
+            'Reporting requirements'
+          ]
+        },
+        writingQuality: {
+          score: 75,
+          clarity: 75,
+          conciseness: 75,
+          professionalism: 80,
+          feedback: 'Professional writing demonstrated. Full analysis unavailable - operating in demo mode.'
+        },
+        recommendations: [
+          'Include specific regulatory citations',
+          'Quantify all financial impacts',
+          'Develop detailed implementation timeline',
+          'Address risk mitigation strategies'
+        ],
+        nextSteps: [
+          'Review additional regulatory scenarios',
+          'Practice quantitative impact analysis'
+        ],
         analysisType: 'demo-fallback',
+        studentAnswers: {
+          executiveSummary: analysisData.studentSummary || '',
+          impactAnalysis: analysisData.studentImpact || ''
+        },
         error: error.message
       };
       return placeholderAnalysis;

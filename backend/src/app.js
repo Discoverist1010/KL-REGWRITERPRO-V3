@@ -7,6 +7,13 @@ require('dotenv').config()
 const app = express()
 const PORT = process.env.PORT || 5000
 
+// Add readiness flag for health checks
+let isAppReady = false
+setTimeout(() => {
+  isAppReady = true
+  console.log('✅ Application ready for health checks')
+}, 8000) // 8 second delay for all services to initialize
+
 console.log('🚀 KL RegWriter Pro V3 Backend - RESTORED ARCHITECTURE')
 console.log('📊 Startup Diagnostics:')
 console.log(`   🔌 PORT: ${PORT}`)
@@ -54,6 +61,15 @@ app.use('/uploads', (req, res, next) => {
 // Health check (enhanced from your original)
 app.get('/api/health', (req, res) => {
   console.log(`🔍 Health check from: ${req.headers.origin || 'no-origin'}`)
+  
+  // Return 503 if app is still initializing
+  if (!isAppReady) {
+    return res.status(503).json({
+      status: 'starting',
+      message: 'Application is initializing, please wait...',
+      timestamp: new Date().toISOString()
+    })
+  }
   
   let uploadsAccessible = false
   try {

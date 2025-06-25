@@ -81,7 +81,15 @@ ${executiveSummary}
 STUDENT'S IMPACT ANALYSIS:
 ${impactAnalysis}
 
-Please provide a comprehensive analysis with scores and detailed feedback. Format your response as JSON with the following EXACT structure:
+Please provide a comprehensive analysis of the student's submission. 
+
+IMPORTANT INSTRUCTIONS:
+1. Writing Quality scores (clarity, conciseness, professionalism) MUST be based on evaluating the STUDENT'S ACTUAL ANSWERS, not generic scores
+2. Regulatory Compliance should analyze what compliance requirements are in the DOCUMENT, not the student's understanding
+3. Missing Elements should list key compliance points from the document that students should include
+4. Next Steps should provide 3 specific writing improvement tips based on the student's actual writing
+
+Format your response as JSON with the following EXACT structure:
 
 {
   "overallScore": [number 0-100],
@@ -99,15 +107,15 @@ Please provide a comprehensive analysis with scores and detailed feedback. Forma
   },
   "regulatoryCompliance": {
     "score": [number 0-100],
-    "feedback": "Specific assessment of regulatory understanding",
-    "missingElements": ["missing element 1", "missing element 2"]
+    "feedback": "Analysis of the actual compliance requirements found in the DOCUMENT (not student's understanding)",
+    "missingElements": ["Key compliance point from document that student should include", "Another compliance requirement from document that was missed"]
   },
   "writingQuality": {
-    "score": [number 0-100],
-    "clarity": [number 0-100],
-    "conciseness": [number 0-100],
-    "professionalism": [number 0-100],
-    "feedback": "Specific writing quality assessment"
+    "score": [number 0-100 - overall writing quality based on student's actual text],
+    "clarity": [number 0-100 - how clear is the student's actual writing?],
+    "conciseness": [number 0-100 - how concise is the student's actual writing?],
+    "professionalism": [number 0-100 - how professional is the student's actual tone and style?],
+    "feedback": "Specific assessment of the student's writing quality, mentioning actual phrases or patterns from their text"
   },
   "recommendations": [
     "Actionable recommendation 1",
@@ -116,17 +124,18 @@ Please provide a comprehensive analysis with scores and detailed feedback. Forma
     "Actionable recommendation 4"
   ],
   "nextSteps": [
-    "Next step 1",
-    "Next step 2"
+    "Specific writing improvement tip 1 based on student's actual writing weaknesses",
+    "Specific writing improvement tip 2 based on student's actual writing weaknesses", 
+    "Specific writing improvement tip 3 based on student's actual writing weaknesses"
   ]
 }
 
-Evaluate based on:
-- Regulatory compliance understanding
-- Executive summary conciseness and focus
-- Impact analysis relevance to stakeholders
-- Professional communication style
-- Implementation feasibility awareness`;
+Evaluation Guidelines:
+- Writing Quality: Analyze the ACTUAL text written by the student for clarity, conciseness, and professionalism
+- Regulatory Compliance: Identify what compliance requirements are IN THE DOCUMENT, not what the student wrote
+- Missing Elements: List specific compliance points from the document that the student should have included
+- Next Steps: Provide 3 specific writing tips based on weaknesses in the student's actual submission
+- All scores must reflect the student's actual performance, not generic values`;
   }
 
   parseClaudeResponse(responseText, submissionData) {
@@ -195,10 +204,17 @@ Evaluate based on:
     const { answers } = submissionData;
     const { executiveSummary, impactAnalysis } = answers || {};
 
-    // Calculate scores based on content quality
+    // Calculate scores based on actual student content
     const summaryScore = this.calculateContentScore(executiveSummary);
     const analysisScore = this.calculateContentScore(impactAnalysis);
-    const overallScore = Math.round((summaryScore + analysisScore) / 2);
+    
+    // Calculate writing quality scores based on actual text
+    const clarityScore = this.calculateClarityScore(executiveSummary, impactAnalysis);
+    const concisenessScore = this.calculateConcisenessScore(executiveSummary, impactAnalysis);
+    const professionalismScore = this.calculateProfessionalismScore(executiveSummary, impactAnalysis);
+    const writingScore = Math.round((clarityScore + concisenessScore + professionalismScore) / 3);
+    
+    const overallScore = Math.round((summaryScore + analysisScore + writingScore) / 3);
 
     return {
       sessionId: submissionData.sessionId,
@@ -242,11 +258,11 @@ Evaluate based on:
         ]
       },
       writingQuality: {
-        score: Math.round((summaryScore + analysisScore) / 2),
-        clarity: summaryScore > 80 ? 85 : 75,
-        conciseness: analysisScore > 80 ? 80 : 70,
-        professionalism: 85,
-        feedback: 'Professional communication style with clear structure. Consider using more specific data points and quantitative metrics to strengthen arguments.'
+        score: writingScore,
+        clarity: clarityScore,
+        conciseness: concisenessScore,
+        professionalism: professionalismScore,
+        feedback: this.generateWritingFeedback(executiveSummary, impactAnalysis, clarityScore, concisenessScore, professionalismScore)
       },
       recommendations: [
         'Incorporate specific regulatory deadlines and milestones',
@@ -255,8 +271,9 @@ Evaluate based on:
         'Include risk assessment and mitigation planning'
       ],
       nextSteps: [
-        'Practice analyzing complex regulatory scenarios',
-        'Study successful regulatory implementation case studies'
+        executiveSummary?.length < 150 ? 'Expand your executive summary to include more comprehensive coverage of key points' : 'Focus on more concise expression of main ideas',
+        clarityScore < 80 ? 'Improve clarity by using simpler sentence structures and defining technical terms' : 'Maintain your clear writing style',
+        'Use more specific quantitative data and examples to support your analysis'
       ],
       analysisType: 'placeholder',
       studentAnswers: {
@@ -284,6 +301,101 @@ Evaluate based on:
     if (text.split('.').length >= 3) score += 5; // Multiple sentences
     
     return Math.min(95, Math.max(45, score));
+  }
+
+  calculateClarityScore(summary, analysis) {
+    const text = `${summary || ''} ${analysis || ''}`;
+    if (!text.trim()) return 0;
+    
+    let score = 50; // Base score
+    
+    // Check sentence length (shorter sentences = clearer)
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const avgSentenceLength = sentences.reduce((sum, s) => sum + s.split(' ').length, 0) / sentences.length;
+    if (avgSentenceLength < 20) score += 20;
+    else if (avgSentenceLength < 30) score += 10;
+    
+    // Check for transition words
+    const transitions = ['however', 'therefore', 'furthermore', 'additionally', 'consequently'];
+    const hasTransitions = transitions.some(word => text.toLowerCase().includes(word));
+    if (hasTransitions) score += 15;
+    
+    // Paragraph structure
+    const paragraphs = text.split('\n\n').filter(p => p.trim().length > 0);
+    if (paragraphs.length > 1) score += 15;
+    
+    return Math.min(100, score);
+  }
+
+  calculateConcisenessScore(summary, analysis) {
+    const text = `${summary || ''} ${analysis || ''}`;
+    if (!text.trim()) return 0;
+    
+    let score = 60; // Base score
+    const wordCount = text.split(/\s+/).length;
+    
+    // Optimal length ranges
+    if (summary) {
+      const summaryWords = summary.split(/\s+/).length;
+      if (summaryWords >= 50 && summaryWords <= 150) score += 20;
+      else if (summaryWords < 50) score -= 10;
+      else if (summaryWords > 200) score -= 10;
+    }
+    
+    // Check for redundancy (repeated phrases)
+    const phrases = text.match(/\b(\w+\s+\w+)\b/g) || [];
+    const uniquePhrases = new Set(phrases);
+    const redundancyRatio = uniquePhrases.size / phrases.length;
+    if (redundancyRatio > 0.8) score += 20;
+    
+    return Math.min(100, score);
+  }
+
+  calculateProfessionalismScore(summary, analysis) {
+    const text = `${summary || ''} ${analysis || ''}`;
+    if (!text.trim()) return 0;
+    
+    let score = 70; // Base score
+    
+    // Check for professional language indicators
+    const professionalTerms = ['regulatory', 'compliance', 'implementation', 'framework', 'assessment', 'stakeholder'];
+    const termCount = professionalTerms.filter(term => text.toLowerCase().includes(term)).length;
+    score += Math.min(20, termCount * 3);
+    
+    // Check for proper capitalization
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const properlyCapitalized = sentences.filter(s => s.trim()[0] === s.trim()[0].toUpperCase()).length;
+    if (properlyCapitalized === sentences.length) score += 10;
+    
+    return Math.min(100, score);
+  }
+
+  generateWritingFeedback(summary, analysis, clarity, conciseness, professionalism) {
+    if (!summary && !analysis) {
+      return "No content provided to evaluate writing quality.";
+    }
+    
+    const feedback = [];
+    
+    if (clarity < 70) {
+      feedback.push("Improve clarity by using shorter sentences and clearer transitions between ideas.");
+    } else {
+      feedback.push("Good clarity in presenting ideas.");
+    }
+    
+    if (conciseness < 70) {
+      feedback.push("Work on being more concise - eliminate redundant phrases and unnecessary words.");
+    } else {
+      feedback.push("Effective concise writing demonstrated.");
+    }
+    
+    if (professionalism < 80) {
+      feedback.push("Enhance professional tone by using more industry-specific terminology.");
+    } else {
+      feedback.push("Professional tone well-maintained throughout.");
+    }
+    
+    return feedback.join(' ');
   }
 }
 

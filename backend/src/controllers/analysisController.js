@@ -247,10 +247,24 @@ const getSessionData = async (sessionId) => {
 const getDocumentContent = async (documentId) => {
   try {
     const metadataPath = path.join(__dirname, '../../uploads/metadata', `${documentId}.json`)
+    console.log('📁 Looking for metadata at:', metadataPath)
+    
     const metadata = JSON.parse(await fs.readFile(metadataPath, 'utf8'))
-    return metadata.extractedText || 'Document content not available for analysis'
+    console.log('📄 Metadata found, text length:', metadata.extractedText?.length || 0)
+    
+    // Check various possible fields for text content
+    const textContent = metadata.textContent || metadata.extractedText || metadata.text || metadata.content || '';
+    
+    if (!textContent || textContent.length < 10) {
+      console.warn('⚠️ No valid text content in metadata')
+      console.log('📋 Available metadata fields:', Object.keys(metadata))
+      return 'Document content not available for analysis'
+    }
+    
+    console.log('✅ Document content retrieved, length:', textContent.length)
+    return textContent
   } catch (error) {
-    console.error('❌ Error getting document content:', error)
+    console.error('❌ Error getting document content:', error.message)
     return 'Document content not available for analysis'
   }
 }

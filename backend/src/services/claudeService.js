@@ -65,8 +65,20 @@ class ClaudeService {
   }
 
   buildAnalysisPrompt(documentText, executiveSummary, impactAnalysis, language) {
+    // Log document status
+    console.log('📄 Document text status:', {
+      hasDocument: !!documentText,
+      documentLength: documentText?.length || 0,
+      documentPreview: documentText?.substring(0, 50) || 'No document'
+    });
+    
     // Truncate document to manage token usage
-    const truncatedDoc = documentText.substring(0, 1500);
+    const truncatedDoc = documentText ? documentText.substring(0, 2000) : ''; // Increased to 2000
+    
+    // If no document, mention it clearly
+    if (!truncatedDoc || truncatedDoc.length < 10) {
+      console.warn('⚠️ No document content available for analysis');
+    }
     
     return `You are an expert regulatory analyst. Analyze the following student submission for a regulatory writing exercise.
 

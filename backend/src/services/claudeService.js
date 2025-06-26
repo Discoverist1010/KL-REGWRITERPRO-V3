@@ -103,13 +103,13 @@ Format response as JSON:
     "score": [number 0-100],
     "strengths": ["strength 1", "strength 2", "strength 3"],
     "improvements": ["improvement 1", "improvement 2", "improvement 3"],
-    "professionalExample": "Write 2-3 sentences summarizing the ACTUAL regulatory content from this document"
+    "professionalExample": "Summarize the major changes proposed focusing on: WHO is affected, WHAT changed, WHEN it takes effect, WHY it matters. Use short sentences. Include only facts/figures that change client action. Start with the main change."
   },
   "impactAnalysis": {
     "score": [number 0-100],
     "strengths": ["strength 1", "strength 2", "strength 3"],
     "improvements": ["improvement 1", "improvement 2", "improvement 3"],
-    "professionalExample": "Write impact analysis based on the ACTUAL implications discussed in this document"
+    "professionalExample": "Write concise paragraphs on impacts for custodians and asset managers, mixing prose with bullets for clarity. Include: immediate operational changes, future implications (use 'may require', 'likely to lead to'), and action items. Keep factual and neutral. Connect each impact to client action."
   },
   "regulatoryCompliance": {
     "score": [number 0-100],
@@ -143,7 +143,7 @@ Format response as JSON:
 
 }
 
-Be concise. Base all examples on document content.`;
+Focus on actionable insights. Strip non-essential details. Avoid jargon unless essential.`;
   }
 
   parseClaudeResponse(responseText, submissionData) {
